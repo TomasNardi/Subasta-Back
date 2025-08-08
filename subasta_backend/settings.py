@@ -23,6 +23,10 @@ load_dotenv()  # Cargo variables de entorno.
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5754",
 ]
@@ -45,11 +49,8 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-tk%)i3-_qpjs^z8y)=t@i$87c9)epvh4z6f&uiimgif#ukm1+7'
 
-# Debug - Auto ajuste para producción/desarrollo
-# DEBUG = os.environ.get("DEBUG", "False").lower() == "False"  # true en produccion
-DEBUG=True
-
-
+# Debug - Auto ajuste para producción/desarrollo (DEBE ESTAR EN FALSE EN RENDER LA ENV DE ENTORNO)
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 # This production code might break development mode, so we check whether we're in DEBUG mode
 if not DEBUG:
@@ -116,23 +117,20 @@ WSGI_APPLICATION = 'subasta_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# PRODUCCION
-DATABASES = {
-    "default": dj_database_url.config(
-        # Replace this value with your local database's connection string.
-        default="postgresql://postgres:postgres@localhost:5432/datasubasta",
-        conn_max_age=600,
-    )
-}
-
-
-# DESARROLLO
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default="postgresql://postgres:postgres@localhost:5432/datasubasta",
+            conn_max_age=600,
+        )
+    }
 
 
 # Password validation
