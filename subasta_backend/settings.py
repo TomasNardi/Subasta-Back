@@ -46,7 +46,9 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 SECRET_KEY = 'django-insecure-tk%)i3-_qpjs^z8y)=t@i$87c9)epvh4z6f&uiimgif#ukm1+7'
 
 # Debug - Auto ajuste para producción/desarrollo
-DEBUG = os.environ.get("DEBUG", "False").lower() == "true"  # true en produccion
+# DEBUG = os.environ.get("DEBUG", "False").lower() == "False"  # true en produccion
+DEBUG=True
+
 
 
 # This production code might break development mode, so we check whether we're in DEBUG mode
@@ -57,7 +59,11 @@ if not DEBUG:
     # and renames the files with unique names for each version to support long-term caching
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
     
-ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = []
+else:
+    ALLOWED_HOSTS = ["https://subasta-back-1.onrender.com"]
+
 
 
 # Application definition
