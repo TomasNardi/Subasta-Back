@@ -18,20 +18,20 @@ def crear_subasta_api(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Cree el superusuario desde el backend, con ruta por RENDER
+# # Cree el superusuario desde el backend, con ruta por RENDER
 
-def create_superuser(request):
-    try:
-        username = "BifyAdmin"
-        password = "admin1999"
-        email = "admin@example.com"
+# def create_superuser(request):
+#     try:
+#         username = "BifyAdmin"
+#         password = "admin1999"
+#         email = "admin@example.com"
 
-        if not User.objects.filter(username=username).exists():
-            User.objects.create_superuser(
-                username=username, email=email, password=password
-            )
-            return HttpResponse("Superusuario creado con éxito.")
-        else:
-            return HttpResponse("El superusuario ya existe.")
-    except Exception as e:
-        return HttpResponse(f"Error: {e}")
+#         if not User.objects.filter(username=username).exists():
+#             User.objects.create_superuser(
+#                 username=username, email=email, password=password
+#             )
+#             return HttpResponse("Superusuario creado con éxito.")
+#         else:
+#             return HttpResponse("El superusuario ya existe.")
+#     except Exception as e:
+#         return HttpResponse(f"Error: {e}")
