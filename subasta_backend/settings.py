@@ -63,7 +63,8 @@ if not DEBUG:
 if DEBUG:
     ALLOWED_HOSTS = []
 else:
-    ALLOWED_HOSTS = ["https://subasta-back-1.onrender.com"]
+    ALLOWED_HOSTS = ["subasta-back-1.onrender.com"]
+
 
 
 
