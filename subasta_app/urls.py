@@ -6,5 +6,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('api/subastas/crear/', crear_subasta_api, name='crear_subasta_api'),
-    path('create-superuser/', create_superuser, name='create_superuser'),  # NO ES API
+    
+    # This route should be comented for security reasons
+    # path('create-superuser/', create_superuser, name='create_superuser'),  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
