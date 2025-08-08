@@ -1,0 +1,15 @@
+# Ignorar base de datos SQLite
+db.sqlite3
+
+# Ignorar archivos de entorno
+.env
+
+# Ignorar archivos pycache
+__pycache__/
+*.pyc
+
+# Ignorar archivos estáticos compilados (dependiendo del setup)
+staticfiles/
+
+# Ignorar archivos de sistema
+.DS_Store
