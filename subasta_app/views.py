@@ -10,6 +10,15 @@ from django.db import transaction
 from rest_framework.parsers import JSONParser
 
 
+
+
+@api_view(["GET"])
+def keep_alive(request):
+    if request.method == "GET":
+        return Response(status=200)
+    else:
+        return Response(status=400)
+     
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 def crear_subasta_api(request):
