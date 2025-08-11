@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import crear_subasta_api, create_superuser
+from .views import crear_subasta_api
+# create_superuser
 from django.conf import settings
 from django.conf.urls.static import static
 

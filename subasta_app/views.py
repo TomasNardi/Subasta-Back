@@ -6,17 +6,46 @@ from rest_framework import status
 from .serializers import ProductSerializer
 from django.contrib.auth.models import User
 from django.http import JsonResponse, Http404, HttpResponse
+from django.db import transaction
+from rest_framework.parsers import JSONParser
+
 
 
 
 @api_view(['POST'])
-@parser_classes([MultiPartParser, FormParser])  # Permite subir imagen
+@parser_classes([MultiPartParser, FormParser])
 def crear_subasta_api(request):
-    serializer = ProductSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    productos = []
+    i = 0
+    while True:
+        key_title = f'productos[{i}][title]'
+        key_price = f'productos[{i}][price]'
+        key_image = f'productos[{i}][image]'
+
+        if key_title in request.data:
+            producto_data = {
+                'title': request.data.get(key_title),
+                'price': request.data.get(key_price),
+                'image': request.data.get(key_image),
+            }
+            productos.append(producto_data)
+            i += 1
+        else:
+            break
+
+    if not productos:
+        return Response({"error": "No products received"}, status=400)
+
+    with transaction.atomic():
+        for producto_data in productos:
+            serializer = ProductSerializer(data=producto_data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=400)
+
+    return Response({"message": "Todos los productos cargados"}, status=201)
+
 
 # # Cree el superusuario desde el backend, con ruta por RENDER
 
