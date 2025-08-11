@@ -10,8 +10,6 @@ from django.db import transaction
 from rest_framework.parsers import JSONParser
 
 
-
-
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 def crear_subasta_api(request):
