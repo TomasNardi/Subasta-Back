@@ -1,15 +1,13 @@
 from django.urls import path
-from .views import crear_subasta_api, keep_alive
-# create_superuser
-from django.conf import settings
-from django.conf.urls.static import static
+from .views import crear_subasta_api, keep_alive, RegisterView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path('api/subastas/crear/', crear_subasta_api, name='crear_subasta_api'),
+    path("api/subastas/crear/", crear_subasta_api, name="crear_subasta_api"),
+    path("keep-alive/", keep_alive, name="keep_alive"),
 
-    # Endpoint para mantener el servidor vivo
-    path('keep-alive/', keep_alive, name='keep_alive'),
-
-    # This route should be commented for security reasons
-    # path('create-superuser/', create_superuser, name='create_superuser'),  
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Auth
+    path("api/register/", RegisterView.as_view(), name="register"),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+]

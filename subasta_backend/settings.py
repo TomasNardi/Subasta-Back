@@ -16,6 +16,7 @@ from pathlib import Path
 import dj_database_url
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 load_dotenv()  # Cargo variables de entorno.
 
@@ -50,7 +51,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 SECRET_KEY = 'django-insecure-tk%)i3-_qpjs^z8y)=t@i$87c9)epvh4z6f&uiimgif#ukm1+7'
 
 # Debug - Auto ajuste para producción/desarrollo (DEBE ESTAR EN FALSE EN RENDER LA ENV DE ENTORNO)
-DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+DEBUG = os.environ.get("DEBUG", "False").lower() == "false"
 
 # This production code might break development mode, so we check whether we're in DEBUG mode
 if not DEBUG:
@@ -64,8 +65,6 @@ if DEBUG:
     ALLOWED_HOSTS = []
 else:
     ALLOWED_HOSTS = ["subasta-back-1.onrender.com"]
-
-
 
 
 # Application definition
@@ -113,6 +112,21 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'subasta_backend.wsgi.application'
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
 
 
 # Database
