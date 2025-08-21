@@ -30,17 +30,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5754",
+    "https://subasta-front.vercel.app",
 ]
 
-# Si usas regex para más flexibilidad con subdominios de devtunnels
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://[a-z0-9]+-3000\.brs\.devtunnels\.ms$",
     r"^https://[a-z0-9]+-8000\.brs\.devtunnels\.ms$",
-]
-
-CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://[\w-]+\.vercel\.app$",
 ]
+
 
 
 # Quick-start development settings - unsuitable for production
