@@ -30,6 +30,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5754",
+    "http://localhost:5753",
     "https://subasta-front.vercel.app",
 ]
 
