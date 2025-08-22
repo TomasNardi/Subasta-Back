@@ -49,7 +49,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 SECRET_KEY = 'django-insecure-tk%)i3-_qpjs^z8y)=t@i$87c9)epvh4z6f&uiimgif#ukm1+7'
 
 # Debug - Auto ajuste para producción/desarrollo (DEBE ESTAR EN FALSE EN RENDER LA ENV DE ENTORNO)
-DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+DEBUG = os.environ.get("DEBUG", "False").lower() == "False"
 
 # This production code might break development mode, so we check whether we're in DEBUG mode
 if not DEBUG:
