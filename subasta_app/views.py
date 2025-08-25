@@ -50,6 +50,7 @@ def keep_alive(request):
         return Response(status=400)
      
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])  # 🔒 Valid Token
 @parser_classes([MultiPartParser, FormParser])
 def crear_subasta_api(request):
     productos = []
