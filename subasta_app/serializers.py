@@ -72,8 +72,11 @@ class AdminRegisterSerializer(serializers.ModelSerializer):
 class WhatsAppGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = WhatsAppGroup
-        fields = ("id", "wa_chat_id", "name")
+        fields = ["id", "group_name", "group_id", "created_at"]
+        read_only_fields = ["id", "created_at"]
 
+class AssignGroupToAuctionSerializer(serializers.Serializer):
+    wa_group_id = serializers.IntegerField()
 
 class RuleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -131,6 +134,22 @@ class ItemSerializer(serializers.ModelSerializer):
 
     def get_bids_count(self, obj):
         return obj.bids.count()
+
+class BulkAuctionRulesInputSerializer(serializers.Serializer):
+    """
+    Body esperado para cargar reglas visibles de la subasta.
+    {
+        "rules": [
+            "No ofertas fantasma.",
+            "Tenés 5 minutos para reclamar.",
+            "Pago inmediato por transferencia."
+        ]
+    }
+    """
+    rules = serializers.ListField(
+        child=serializers.CharField(allow_blank=False),
+        allow_empty=False
+    )
 
 class AuctionSerializer(serializers.ModelSerializer):
     wa_group = WhatsAppGroupSerializer(read_only=True)

@@ -141,7 +141,7 @@ if DEBUG:
 else:
     DATABASES = {
         "default": dj_database_url.config(
-            default="postgresql://postgres:postgres@localhost:5432/datasubasta",
+            default="postgresql://subastas_user:subastas_pass@localhost:5432/subastas_db",
             conn_max_age=600,
         )
     }

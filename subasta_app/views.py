@@ -19,7 +19,9 @@ from .models import (
 from .serializers import (
     AuctionSerializer, ItemSerializer, ParticipantSerializer, BidSerializer,
     RuleSerializer, MessageTemplateSerializer, WhatsAppGroupSerializer,
-    MyTokenObtainPairSerializer, AdminRegisterSerializer
+    MyTokenObtainPairSerializer, AdminRegisterSerializer,
+    BulkAuctionRulesInputSerializer,
+    AssignGroupToAuctionSerializer,
 )
 from .services import wa_start, wa_close
 
@@ -96,6 +98,110 @@ class AuctionViewSet(BaseViewSet):
         auction.status = Auction.Status.PAUSED
         auction.save(update_fields=["status"])
         return Response({"ok": True, "auction_id": auction.id}, status=200)
+    ##POST /auctions/<auction_id>/rules
+    @action(detail=True, methods=["post"], url_path="rules")
+    def create_rules(self, request, pk=None):
+        """
+        Carga en bloque las 'reglas visibles' de la subasta.
+        Espera:
+        {
+            "rules": [
+                "No ofertas fantasma.",
+                "Tenés 5 minutos para reclamar.",
+                "Pago inmediato por transferencia."
+            ]
+        }
+
+        Devuelve las reglas creadas.
+        """
+        # 1. validar body
+        body_serializer = BulkAuctionRulesInputSerializer(data=request.data)
+        body_serializer.is_valid(raise_exception=True)
+        rule_texts = body_serializer.validated_data["rules"]
+
+        # 2. obtener la subasta
+        auction = get_object_or_404(Auction, pk=pk)
+
+        # 3. generar keys únicas tipo RULE_1, RULE_2, ...
+        #
+        #    - buscamos las que ya existen para esta subasta con ese formato
+        #      para continuar numeración y no chocarnos con otras Rule
+        #      que usen keys técnicas como "claim_keyword", etc.
+        #
+        existing_keys = list(
+            auction.rules.filter(key__startswith="RULE_").values_list("key", flat=True)
+        )
+
+        # sacar el número máximo ya usado en RULE_x
+        max_n = 0
+        for k in existing_keys:
+            # k esperado "RULE_12"
+            try:
+                n = int(k.split("_", 1)[1])
+                max_n = max(max_n, n)
+            except (IndexError, ValueError):
+                pass
+
+        # 4. crear objetos Rule en memoria
+        new_rule_objs = []
+        for i, text in enumerate(rule_texts, start=1):
+            key = f"RULE_{max_n + i}"
+            new_rule_objs.append(
+                Rule(
+                    auction=auction,
+                    key=key,
+                    value=text,
+                )
+            )
+
+        # 5. persistir en bulk
+        Rule.objects.bulk_create(new_rule_objs)
+
+        # 6. preparar respuesta con las recién creadas
+        created_rules = Rule.objects.filter(
+            auction=auction,
+            key__in=[r.key for r in new_rule_objs],
+        ).order_by("key")
+
+        data_out = RuleSerializer(created_rules, many=True, context={"request": request})
+
+        return Response(
+            {
+                "auction_id": auction.id,
+                "created_rules": data_out.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["patch"], url_path="assign-group")
+    def assign_group(self, request, pk=None):
+        """
+        Asocia un WhatsAppGroup existente a esta subasta.
+
+        Request body:
+        {
+            "wa_group_id": 7
+        }
+
+        Donde '7' es el ID interno de WhatsAppGroup (PK en tu tabla).
+        """
+        # 1. validar body
+        serializer = AssignGroupToAuctionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        wa_group_id = serializer.validated_data["wa_group_id"]
+
+        # 2. buscar auction y grupo
+        auction = get_object_or_404(Auction, pk=pk)
+        wa_group = get_object_or_404(WhatsAppGroup, pk=wa_group_id)
+
+        # 3. asociar
+        auction.wa_group = wa_group
+        auction.save(update_fields=["wa_group"])
+
+        # 4. responder la subasta actualizada
+        response_data = AuctionSerializer(auction, context={"request": request}).data
+        return Response(response_data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"])
     def finish(self, request, pk=None):
@@ -148,6 +254,7 @@ class MessageTemplateViewSet(BaseViewSet):
 class WhatsAppGroupViewSet(BaseViewSet):
     queryset = WhatsAppGroup.objects.all()
     serializer_class = WhatsAppGroupSerializer
+    http_method_names = ["get", "post", "head", "options"]
 
 
 #
