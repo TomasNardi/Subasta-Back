@@ -70,9 +70,25 @@ class AdminRegisterSerializer(serializers.ModelSerializer):
 # Core domain
 
 class WhatsAppGroupSerializer(serializers.ModelSerializer):
+    group_id = serializers.CharField(source="wa_chat_id", required=False)
+    group_name = serializers.CharField(source="name", required=False)
+    
     class Meta:
         model = WhatsAppGroup
-        fields = ("id", "wa_chat_id", "name")
+        fields = ("id", "wa_chat_id", "name", "group_id", "group_name")
+        extra_kwargs = {
+            "wa_chat_id": {"required": False},
+            "name": {"required": False}
+        }
+    
+    def create(self, validated_data):
+        # Ensure wa_chat_id is present (either directly or via group_id)
+        if "wa_chat_id" not in validated_data:
+            return Response(
+                {"error": "Either wa_chat_id or group_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return WhatsAppGroup.objects.create(**validated_data)
 
 
 class RuleSerializer(serializers.ModelSerializer):
@@ -152,12 +168,18 @@ class AuctionSerializer(serializers.ModelSerializer):
             "ends_at",
             "wa_group",
             "wa_group_id",
+            "claim_keyword",
             "items",
             "rules",
             "messages",
             "created_at",
         )
         read_only_fields = ("created_at",)
+
+    def create(self, validated_data):
+        if "claim_keyword" not in validated_data or str(validated_data.get("claim_keyword", "")).strip() == "":
+            validated_data["claim_keyword"] = "claim"
+        return Auction.objects.create(**validated_data)
 
 
 class ParticipantSerializer(serializers.ModelSerializer):
@@ -183,6 +205,16 @@ class BidSerializer(serializers.ModelSerializer):
             "created_at",
             "is_valid",
             "source_message_id",
-            "source_chat_id",
         )
         read_only_fields = ("created_at",)
+
+
+class BulkAuctionRulesInputSerializer(serializers.Serializer):
+    rules = serializers.ListField(
+        child=serializers.CharField(allow_blank=False),
+        allow_empty=False
+    )
+
+
+class AssignGroupToAuctionSerializer(serializers.Serializer):
+    wa_group_id = serializers.IntegerField()

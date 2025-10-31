@@ -192,3 +192,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Ketson add this lines 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Test database configuration
+import sys
+if 'test' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }

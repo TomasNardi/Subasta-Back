@@ -41,6 +41,7 @@ class Auction(models.Model):
     ends_at = models.DateTimeField(null=True, blank=True)
     wa_group = models.ForeignKey(WhatsAppGroup, null=True, blank=True, on_delete=models.SET_NULL,
                                  related_name="auctions")
+    claim_keyword = models.CharField(max_length=50, default="claim", blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
