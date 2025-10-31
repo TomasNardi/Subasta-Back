@@ -19,7 +19,8 @@ from .models import (
 from .serializers import (
     AuctionSerializer, ItemSerializer, ParticipantSerializer, BidSerializer,
     RuleSerializer, MessageTemplateSerializer, WhatsAppGroupSerializer,
-    MyTokenObtainPairSerializer, AdminRegisterSerializer
+    MyTokenObtainPairSerializer, AdminRegisterSerializer,
+    BulkAuctionRulesInputSerializer, AssignGroupToAuctionSerializer
 )
 from .services import wa_start, wa_close
 
@@ -117,6 +118,79 @@ class AuctionViewSet(BaseViewSet):
             )
         return Response({"ok": True, "auction_id": auction.id, "wa": wa_resp}, status=200)
 
+    @action(detail=True, methods=["post"], url_path="rules")
+    def create_rules(self, request, pk=None):
+        auction = self.get_object()
+        serializer = BulkAuctionRulesInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        rules_texts = serializer.validated_data["rules"]
+        
+        # Calcular el próximo índice para las nuevas reglas
+        # Buscamos las reglas existentes con key que empiece con "RULE_"
+        existing_rules = Rule.objects.filter(
+            auction=auction,
+            key__startswith="RULE_"
+        ).order_by("key")
+        
+        # Extraer el número máximo actual
+        max_index = 0
+        for rule in existing_rules:
+            try:
+                # key format: "RULE_1", "RULE_2", etc.
+                index = int(rule.key.split("_")[1])
+                max_index = max(max_index, index)
+            except (IndexError, ValueError):
+                pass
+        
+        # Crear las nuevas reglas
+        new_rules = []
+        for i, rule_text in enumerate(rules_texts, start=max_index + 1):
+            new_rules.append(
+                Rule(
+                    auction=auction,
+                    key=f"RULE_{i}",
+                    value=rule_text
+                )
+            )
+        
+        # Guardar todas las reglas de una vez
+        Rule.objects.bulk_create(new_rules)
+        
+        # Serializar las reglas creadas
+        created_rules_data = RuleSerializer(new_rules, many=True).data
+        
+        return Response(
+            {
+                "auction_id": auction.id,
+                "created_rules": created_rules_data
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=True, methods=["patch"], url_path="assign-group")
+    def assign_group(self, request, pk=None):
+        auction = self.get_object()
+        serializer = AssignGroupToAuctionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        wa_group_id = serializer.validated_data["wa_group_id"]
+        
+        try:
+            wa_group = WhatsAppGroup.objects.get(pk=wa_group_id)
+        except WhatsAppGroup.DoesNotExist:
+            return Response(
+                {"error": f"WhatsAppGroup with id {wa_group_id} does not exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        auction.wa_group = wa_group
+        auction.save(update_fields=["wa_group"])
+        
+        return Response(AuctionSerializer(auction).data, status=status.HTTP_200_OK)
+
 
 class ItemViewSet(BaseViewSet):
     queryset = Item.objects.all().select_related("auction", "sold_to")
@@ -148,6 +222,7 @@ class MessageTemplateViewSet(BaseViewSet):
 class WhatsAppGroupViewSet(BaseViewSet):
     queryset = WhatsAppGroup.objects.all()
     serializer_class = WhatsAppGroupSerializer
+    http_method_names = ["get", "post", "head", "options"]
 
 
 #
